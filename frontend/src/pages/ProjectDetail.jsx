@@ -1,18 +1,34 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
+import { useToast } from "../components/ToastProvider";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
 
 export const ProjectDetail = () => {
   const { projectId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     api.get(`/projects/${projectId}`).then(setProject).catch(() => setProject(null)).finally(() => setLoading(false));
   }, [projectId]);
 
+  const startChallenge = async () => {
+    if (!project?._id) return;
+    setStarting(true);
+    try {
+      const submission = await api.post("/submissions", { project_id: project._id });
+      navigate(`/submit/${submission._id}`);
+    } catch (err) {
+      toast.pushToast(err.message, "error");
+      setStarting(false);
+    }
+  };
   if (loading) {
     return <div className="space-y-4"><div className="h-48 animate-pulse rounded-[32px] bg-slate-200" /></div>;
   }
@@ -62,6 +78,10 @@ export const ProjectDetail = () => {
           </div>
         </div>
       </Card>
+      <div className="flex flex-wrap gap-3">
+        <Button variant="primary" onClick={startChallenge} disabled={starting}>{starting ? "Starting..." : "Attempt Challenge"}</Button>
+        <Button variant="secondary" onClick={() => navigate("/dashboard")}>Back to Dashboard</Button>
+      </div>
     </div>
   );
 };

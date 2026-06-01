@@ -6,6 +6,7 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Onboarding } from "./pages/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
+import { Drafts } from "./pages/Drafts";
 import { GenerateProject } from "./pages/GenerateProject";
 import { ProjectDetail } from "./pages/ProjectDetail";
 import { SubmissionForm } from "./pages/SubmissionForm";
@@ -53,6 +54,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<StudentRoute><Dashboard /></StudentRoute>} />
+        <Route path="/drafts" element={<StudentRoute><Drafts /></StudentRoute>} />
         <Route path="/generate" element={<StudentRoute><GenerateProject /></StudentRoute>} />
         <Route path="/projects/:projectId" element={<StudentRoute><ProjectDetail /></StudentRoute>} />
         <Route path="/submit/:submissionId" element={<StudentRoute><SubmissionForm /></StudentRoute>} />
@@ -61,7 +63,7 @@ function App() {
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/portfolios" element={<RecruiterRoute><PortfoliosBrowse /></RecruiterRoute>} />
         <Route path="/recruiters" element={<RecruiterRoute><RecruiterDashboard /></RecruiterRoute>} />
-        <Route path="/recruiter/register" element={<ProtectedRoute><RecruiterRegister /></ProtectedRoute>} />
+        <Route path="/recruiter/register" element={<RecruiterRegister />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

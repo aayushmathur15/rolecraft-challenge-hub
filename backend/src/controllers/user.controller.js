@@ -59,6 +59,8 @@ const register = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "none",
+    path: "/",
   };
 
   return res
@@ -104,6 +106,8 @@ const login = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "none",
+    path: "/",
   };
 
   return res
@@ -139,6 +143,8 @@ const logout = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "none",
+    path: "/",
   };
 
   return res
@@ -149,7 +155,7 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+  const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
@@ -173,6 +179,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const options = {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
+      path: "/",
     };
 
     return res
@@ -191,6 +199,67 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+const recruiterSignup = asyncHandler(async (req, res) => {
+  const { username, email, password, fullName, name, company, company_size, hiring_for_role } = req.body;
+
+  if ([username, email, password, fullName, name, company].some((field) => !field || field.trim() === "")) {
+    throw new ApiError(400, "All required fields must be filled");
+  }
+
+  const existingUser = await User.findOne({
+    $or: [{ email }, { username }],
+  });
+
+  if (existingUser) {
+    throw new ApiError(409, "User with email or username already exists");
+  }
+
+  const user = await User.create({
+    username: username.toLowerCase(),
+    email: email.toLowerCase(),
+    password,
+    fullName,
+    role: "recruiter",
+  });
+
+  const { accessToken, refreshToken } = await generateTokens(user._id);
+
+  const Recruiter = require("../models/recruiter.model.js").Recruiter;
+  await Recruiter.create({
+    user_id: user._id,
+    name,
+    company,
+    company_size: company_size || "",
+    hiring_for_role: hiring_for_role || "",
+    email: email.toLowerCase(),
+  });
+
+  const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+  };
+
+  return res
+    .status(201)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        201,
+        {
+          user: createdUser,
+          accessToken,
+          refreshToken,
+        },
+        "Recruiter account created successfully"
+      )
+    );
+});
+
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
@@ -198,9 +267,9 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateUserProfile = asyncHandler(async (req, res) => {
-  const { fullName, college, city, bio, github_url, linkedin_url, level } = req.body;
+  const { fullName, college, city, bio, github_url, linkedin_url, level, role, onboarded } = req.body;
 
-  if (!fullName && !college && !city && !bio && !github_url && !linkedin_url && !level) {
+  if (!fullName && !college && !city && !bio && !github_url && !linkedin_url && !level && !role && typeof onboarded !== "boolean") {
     throw new ApiError(400, "At least one field must be provided");
   }
 
@@ -212,6 +281,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   if (github_url) updateData.github_url = github_url;
   if (linkedin_url) updateData.linkedin_url = linkedin_url;
   if (level) updateData.level = level;
+  if (role) updateData.role = role;
+  if (typeof onboarded === "boolean") updateData.onboarded = onboarded;
 
   const user = await User.findByIdAndUpdate(req.user._id, updateData, { new: true }).select(
     "-password -refreshToken"
@@ -269,6 +340,7 @@ const checkRecruiterStatus = asyncHandler(async (req, res) => {
 
 export {
   register,
+  recruiterSignup,
   login,
   logout,
   refreshAccessToken,

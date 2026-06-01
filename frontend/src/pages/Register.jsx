@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useToast } from "../components/ToastProvider";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 
@@ -13,14 +14,27 @@ export const Register = () => {
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     try {
-      await api.post("/users/register", { fullName, username, email, password });
-      toast.pushToast("Account created. Please sign in.", "success");
-      navigate("/login");
+      const response = await api.post("/users/register", { fullName, username, email, password });
+      
+      // Save tokens
+      if (response.accessToken && response.refreshToken) {
+        localStorage.setItem("accessToken", response.accessToken);
+        localStorage.setItem("refreshToken", response.refreshToken);
+      }
+
+      // Set user
+      if (response.user) {
+        setUser(response.user);
+      }
+
+      toast.pushToast("Account created. Welcome!", "success");
+      navigate("/onboarding");
     } catch (error) {
       toast.pushToast(error.message, "error");
     } finally {
@@ -55,6 +69,9 @@ export const Register = () => {
           {loading ? "Creating account..." : "Create account"}
         </Button>
       </form>
+      <p className="text-center text-sm text-slate-600">
+        Already have an account? <Link to="/login" className="text-indigo-600 font-semibold">Sign in</Link>
+      </p>
     </div>
   );
 };

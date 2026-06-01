@@ -94,7 +94,10 @@ export const Dashboard = () => {
               </Card>
             ))
           ) : (
-            <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-slate-500">No recent projects yet. Generate your first challenge to begin.</div>
+            <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+              <p className="text-slate-600 mb-4">No recent projects yet. Generate your first challenge to begin.</p>
+              <Link to="/generate"><Button variant="primary">Start Your First Project</Button></Link>
+            </div>
           )}
         </div>
       </section>

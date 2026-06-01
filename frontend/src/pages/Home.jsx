@@ -11,7 +11,11 @@ export const Home = () => (
           <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">Level up your portfolio with AI-designed industry projects.</h1>
           <p className="max-w-2xl text-base leading-8 text-slate-600">RoleCraft helps students build authentic work, recruiters discover vetted portfolios, and teams connect through better challenge-based hiring.</p>
           <div className="flex flex-wrap gap-3">
-            <Link to="/register"><Button variant="primary">Get started</Button></Link>
+            <Link to="/register"><Button variant="primary">Sign up as Student</Button></Link>
+            <Link to="/recruiter/register"><Button variant="secondary">Sign up as Recruiter</Button></Link>
+          </div>
+          <p className="text-sm text-slate-600">Already have an account? <Link to="/login" className="text-indigo-600 font-semibold">Sign in</Link></p>
+          <div className="flex flex-wrap gap-3">
             <Link to="/pricing"><Button variant="ghost">See pricing</Button></Link>
           </div>
         </div>

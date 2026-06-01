@@ -14,8 +14,8 @@ export const AuthProvider = ({ children }) => {
   const refreshUser = async () => {
     setLoading(true);
     try {
-      const current = await api.get("/users/profile");
-      const recruiterPayload = await api.get("/users/check-recruiter");
+      const current = await api.get("/users/profile", false);
+      const recruiterPayload = await api.get("/users/check-recruiter", false);
       setUser(current);
       setIsRecruiter(recruiterPayload.isRecruiter);
       setRecruiter(recruiterPayload.recruiter);
@@ -35,17 +35,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    await api.post("/users/login", { email, password });
-    const result = await refreshUser();
-    if (result?.current) {
-      if (!result.current.onboarded) {
+    const result = await api.post("/users/login", { email, password }, false);
+    setUser(result?.user ?? null);
+    setIsRecruiter(result?.user?.isRecruiter ?? false);
+    if (result?.user) {
+      if (!result.user.onboarded) {
         navigate("/onboarding");
-      } else if (result.recruiterPayload?.isRecruiter) {
+      } else if (result.user.isRecruiter) {
         navigate("/portfolios");
       } else {
         navigate("/dashboard");
       }
     }
+    await refreshUser();
   };
 
   const logout = async () => {

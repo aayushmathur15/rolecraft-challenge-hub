@@ -53,10 +53,36 @@ export const Onboarding = () => {
         github_url: githubUrl,
         linkedin_url: linkedinUrl,
         level,
+        role: selectedRole?.name,
+        onboarded: true,
       });
-      setUser((current) => ({ ...current, college, city, github_url: githubUrl, linkedin_url: linkedinUrl, level, onboarded: true, role: selectedRole?.name ?? current?.role }));
+      setUser((current) => ({
+        ...current,
+        college,
+        city,
+        github_url: githubUrl,
+        linkedin_url: linkedinUrl,
+        level,
+        onboarded: true,
+        role: selectedRole?.name ?? current?.role,
+      }));
       await refreshUser();
-      toast.pushToast("Onboarding complete", "success");
+
+      if (selectedRole?.slug) {
+        try {
+          await api.post("/projects", {
+            roleSlug: selectedRole.slug,
+            level,
+            domain: "consumer",
+          });
+          toast.pushToast("Onboarding complete and first project generated", "success");
+        } catch (projectError) {
+          toast.pushToast("Onboarding complete, but failed to generate first project", "warning");
+        }
+      } else {
+        toast.pushToast("Onboarding complete", "success");
+      }
+
       navigate("/dashboard");
     } catch (error) {
       toast.pushToast(error.message, "error");
@@ -122,18 +148,28 @@ export const Onboarding = () => {
                 <p className="mt-2 text-sm text-slate-600">Pick the role that best matches the work you want to showcase.</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {roles.map((role) => (
-                  <button
-                    key={role._id}
-                    type="button"
-                    className={`rounded-3xl border p-5 text-left transition ${selectedRole?._id === role._id ? "border-indigo-500 bg-indigo-50" : "border-slate-200 bg-slate-50 hover:border-indigo-300"}`}
-                    onClick={() => setSelectedRole(role)}
-                  >
-                    <div className="text-2xl">{role.icon_emoji}</div>
-                    <p className="mt-4 font-semibold text-slate-950">{role.name}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{role.description}</p>
-                  </button>
-                ))}
+                {roles && roles.length > 0 ? (
+                  roles.map((role) => (
+                    <button
+                      key={role._id}
+                      type="button"
+                      className={`rounded-3xl border-2 p-5 text-left transition ${
+                        selectedRole?._id === role._id
+                          ? "border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-200/50"
+                          : "border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50/50"
+                      }`}
+                      onClick={() => setSelectedRole(role)}
+                    >
+                      <div className="text-3xl">{role.icon_emoji}</div>
+                      <p className="mt-4 font-semibold text-slate-950">{role.name}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-700">{role.description}</p>
+                    </button>
+                  ))
+                ) : (
+                  <div className="col-span-full rounded-lg border-2 border-dashed border-slate-300 p-8 text-center text-slate-500">
+                    Loading roles...
+                  </div>
+                )}
               </div>
               <div className="flex justify-between gap-3">
                 <Button variant="ghost" type="button" onClick={() => setStep(1)}>
@@ -158,11 +194,15 @@ export const Onboarding = () => {
                   <button
                     key={item.key}
                     type="button"
-                    className={`rounded-3xl border p-5 text-left transition ${level === item.key ? "border-indigo-500 bg-indigo-50" : "border-slate-200 bg-slate-50 hover:border-indigo-300"}`}
+                    className={`rounded-3xl border-2 p-5 text-left transition ${
+                      level === item.key
+                        ? "border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-200/50"
+                        : "border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50/50"
+                    }`}
                     onClick={() => setLevel(item.key)}
                   >
                     <p className="text-lg font-semibold text-slate-950">{item.label}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">{item.description}</p>
                   </button>
                 ))}
               </div>

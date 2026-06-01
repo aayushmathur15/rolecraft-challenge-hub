@@ -64,8 +64,9 @@ const updateSubmissionDraft = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Unauthorized to update this submission");
   }
 
-  if (submission.status !== "draft") {
-    throw new ApiError(400, "Cannot update submitted or graded submissions");
+  // Allow updating draft or graded submissions (for resubmission after grading)
+  if (submission.status === "submitted") {
+    throw new ApiError(400, "Cannot update submitted submissions. Wait for grading to complete.");
   }
 
   const updateData = {};
@@ -77,6 +78,11 @@ const updateSubmissionDraft = asyncHandler(async (req, res) => {
   if (reflection_text !== undefined) updateData.reflection_text = reflection_text;
   if (submission_link !== undefined) updateData.submission_link = submission_link;
   if (submission_type !== undefined) updateData.submission_type = submission_type;
+
+  // If updating a graded submission, reset status to draft for resubmission
+  if (submission.status === "graded") {
+    updateData.status = "draft";
+  }
 
   const updatedSubmission = await Submission.findByIdAndUpdate(submissionId, updateData, {
     new: true,

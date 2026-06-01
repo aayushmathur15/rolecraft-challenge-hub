@@ -6,7 +6,7 @@ const getGenAI = () => {
   if (!process.env.GEMINI_API_KEY) {
     throw new ApiError(500, "GEMINI_API_KEY not configured");
   }
-  return new GoogleGenAI(process.env.GEMINI_API_KEY);
+  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
 
 /**
@@ -64,22 +64,14 @@ Return your response as valid JSON with this exact structure (no markdown, no co
   "hints": ["Hint 1", "Hint 2", "Hint 3"]
 }`;
 
-    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" });
+    const ai = getGenAI();
 
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: systemPrompt,
-            },
-          ],
-        },
-      ],
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: systemPrompt,
     });
 
-    const responseText = result.response.text();
+    const responseText = result.text;
 
     // Parse JSON from response
     let projectData;
@@ -181,22 +173,14 @@ Return your response as valid JSON with this exact structure (no markdown):
   }
 }`;
 
-    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" });
+    const ai = getGenAI();
 
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: gradingPrompt,
-            },
-          ],
-        },
-      ],
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: gradingPrompt,
     });
 
-    const responseText = result.response.text();
+    const responseText = result.text;
 
     let gradingData;
     try {

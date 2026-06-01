@@ -9,10 +9,27 @@ import { generateProjectWithAI } from "../services/ai.service.js";
 const DOMAINS = ["fintech", "edtech", "healthtech", "consumer", "b2b-saas", "logistics"];
 
 const generateProject = asyncHandler(async (req, res) => {
-  const { roleSlug, level, domain: userDomain } = req.body;
+  const { roleSlug: reqRoleSlug, level: reqLevel, domain: userDomain } = req.body;
 
+  // Use provided values or fallback to user profile
+  let roleSlug = reqRoleSlug;
+  let level = reqLevel;
+
+  // If not provided in request, try to get from user profile
+  if (!roleSlug && req.user.role) {
+    const role = await Role.findOne({ name: req.user.role });
+    if (role) {
+      roleSlug = role.slug;
+    }
+  }
+
+  if (!level && req.user.level) {
+    level = req.user.level;
+  }
+
+  // Validate that we have both roleSlug and level
   if (!roleSlug || !level) {
-    throw new ApiError(400, "Role slug and level are required");
+    throw new ApiError(400, "Role slug and level are required. Please complete onboarding first.");
   }
 
   const role = await Role.findOne({ slug: roleSlug.toLowerCase() });

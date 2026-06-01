@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "../components/ToastProvider";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card } from "../components/ui/card";
@@ -24,10 +25,24 @@ export const GenerateProject = () => {
   const [error, setError] = useState("");
   const toast = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     api.get("/roles").then(setRoles).catch(() => setRoles([]));
   }, []);
+
+  // Pre-fill role and level from user profile after onboarding
+  useEffect(() => {
+    if (user && user.role && roles.length > 0) {
+      const userRole = roles.find((role) => role.name === user.role);
+      if (userRole && !roleSlug) {
+        setRoleSlug(userRole.slug);
+      }
+    }
+    if (user && user.level && !level) {
+      setLevel(user.level);
+    }
+  }, [user, roles, roleSlug, level]);
 
   const previewRole = useMemo(() => roles.find((item) => item.slug === roleSlug), [roles, roleSlug]);
 
@@ -109,34 +124,24 @@ export const GenerateProject = () => {
               <p className="mt-2 text-sm text-slate-600">The generated problem will match the role, difficulty, and industry focus.</p>
             </div>
             <div className="grid gap-4">
-              <label className="space-y-2 text-sm text-slate-700">
-                Role
-                <select value={roleSlug} onChange={(event) => setRoleSlug(event.target.value)} className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-indigo-400">
-                  <option value="">Select a role</option>
-                  {roles.map((role) => (
-                    <option key={role._id} value={role.slug}>{role.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="space-y-2 text-sm text-slate-700">
-                Level
-                <select value={level} onChange={(event) => setLevel(event.target.value)} className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-indigo-400">
-                  {levels.map((value) => (
-                    <option key={value} value={value}>{value}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="space-y-2 text-sm text-slate-700">
+              <div className="space-y-2">
+                <p className="text-sm text-slate-700 font-medium">Role & Level</p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="info">{previewRole?.name || "Select role"}</Badge>
+                  <Badge variant="warning">{level.charAt(0).toUpperCase() + level.slice(1)}</Badge>
+                </div>
+              </div>
+              <label className="space-y-2 text-sm text-slate-700 font-medium">
                 Domain
-                <select value={domain} onChange={(event) => setDomain(event.target.value)} className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-indigo-400">
+                <select value={domain} onChange={(event) => setDomain(event.target.value)} className="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400">
                   {domains.map((value) => (
                     <option key={value} value={value}>{value}</option>
                   ))}
                 </select>
               </label>
-              <label className="space-y-2 text-sm text-slate-700">
+              <label className="space-y-2 text-sm text-slate-700 font-medium">
                 Focus area
-                <select value={focus} onChange={(event) => setFocus(event.target.value)} className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-indigo-400">
+                <select value={focus} onChange={(event) => setFocus(event.target.value)} className="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400">
                   {focusAreas.map((value) => (
                     <option key={value} value={value}>{value}</option>
                   ))}

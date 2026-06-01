@@ -20,10 +20,12 @@ export const Login = () => {
     try {
       await auth.login(email, password);
       toast.pushToast("Signed in successfully", "success");
-      if (!auth.user?.onboarded) {
-        navigate("/onboarding");
-      } else if (auth.isRecruiter) {
+      
+      // Check if recruiter first
+      if (auth.isRecruiter) {
         navigate("/portfolios");
+      } else if (!auth.user?.onboarded) {
+        navigate("/onboarding");
       } else {
         navigate("/dashboard");
       }

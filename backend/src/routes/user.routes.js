@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   register,
+  recruiterSignup,
   login,
   logout,
   refreshAccessToken,
@@ -17,6 +18,7 @@ const router = Router();
 
 // Public routes
 router.post("/register", register);
+router.post("/recruiter-signup", recruiterSignup);
 router.post("/login", login);
 router.post("/refresh-token", refreshAccessToken);
 router.get("/public/:userId", getUserPublicProfile);
